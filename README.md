@@ -38,6 +38,37 @@
 
 本仓库对其进行了模块化封装，可以更方便地集成进哪吒前端面板使用。
 
+> **⚠️ 重要提示**  
+> **强烈建议部署属于自己的音乐播放器后端服务！**  
+> 
+> - 音乐播放器需要后端 API 支持，推荐使用 [eooce/music-player](https://github.com/eooce/music-player) 项目自行部署
+> - 自建后端可以：
+>   - 上传自己喜欢的音乐
+>   - 避免依赖公共 API（可能存在限流、失效等问题）
+>   - 完全控制播放列表和音乐资源
+> - 部署完成后，在配置中修改 `window.MusicPlayerAPIUrl` 为你的 API 地址即可
+> 
+> **API 地址格式：**
+> ```
+> https://your-domain.com/api/music/list
+> ```
+> 
+> API 返回的 JSON 格式示例：
+> ```json
+> {
+>   "total": 20,
+>   "data": [
+>     {
+>       "filename": "歌曲名-艺术家.mp3",
+>       "url": "https://your-domain.com/music/歌曲名-艺术家.mp3",
+>       "size": "8.81MB",
+>       "extension": "MP3",
+>       "lastModified": "10/29/2025, 6:57:40 AM"
+>     }
+>   ]
+> }
+> ```
+
 ---
 
 ## 📁 项目结构
@@ -134,20 +165,36 @@ window.EnableRainEffect = true;                    // 是否启用背景下雨
 ### 🎵 音乐播放器 (music-player.js)
 
 ```javascript
-window.EnableMusicPlayer = true;                   // 是否启用音乐播放器
-window.MusicPlayerBallSize = 60;                   // 悬浮球尺寸（像素）
-window.MusicPlayerAutoCollapse = 2600;             // 自动收起延迟（毫秒）
-window.MusicPlayerTitle = "Music Player";          // 播放器标题
-window.MusicPlayerAPIUrl = "API地址";              // 音乐列表API
-window.MusicPlayerGitHubUrl = "GitHub链接";        // GitHub仓库链接
-window.MusicPlayerDefaultVolume = 0.2;             // 默认音量（0-1）
-window.MusicPlayerCoverList = ["封面URL1", "..."]; // 封面图片列表
-window.MusicPlayerRotationSpeed = 5;               // 唱片旋转速度（秒/圈）
-window.MusicPlayerStrokeWidth = 4.5;               // 悬浮球描边宽度
-window.MusicPlayerStrokeColor = "";                // 描边颜色（留空自动）
-window.MusicPlayerOpacity = 0.5;                   // 面板不透明度（0-1）
-window.MusicPlayerWaveSpeed = 2.0;                 // 音波扩散速度（秒）
-window.MusicPlayerWaveScale = 1.6;                 // 音波扩散倍数
+// 基础配置
+window.EnableMusicPlayer = true;                     // 是否启用音乐播放器
+window.MusicPlayerBallSize = 50;                     // 悬浮球尺寸（像素）
+window.MusicPlayerAutoCollapse = 2600;               // 自动收起延迟（毫秒）
+window.MusicPlayerTitle = "NeZha Music Player";      // 播放器标题/默认艺术家名称
+window.MusicPlayerAPIUrl = "API地址";                // 音乐列表API地址
+window.MusicPlayerDefaultVolume = 0.2;               // 默认音量（0-1）
+
+// GitHub 链接配置
+window.MusicPlayerGitHubUrl = "GitHub链接";          // GitHub仓库链接（留空或false则不显示）
+window.MusicPlayerGitHubIconSize = 28;               // GitHub图标容器大小（像素）
+
+// 封面配置
+window.MusicPlayerCoverList = ["封面URL1", "..."];   // 封面图片列表（随机分配）
+
+// 视觉效果配置
+window.MusicPlayerRotationSpeed = 5;                 // 唱片旋转速度（秒/圈，数值越大越慢）
+window.MusicPlayerStrokeWidth = 4.5;                 // 悬浮球描边宽度（像素，0表示无描边）
+window.MusicPlayerStrokeColor = "";                  // 悬浮球描边颜色（留空自动适配主题）
+window.MusicPlayerOpacity = 0.5;                     // 面板不透明度（0-1）
+
+// 音波效果配置
+window.MusicPlayerWaveStrokeWidth = "2.8px";         // PC端音波圆环宽度
+window.MusicPlayerWaveMobileStrokeWidth = "1.8px";   // 移动端音波圆环宽度
+window.MusicPlayerWaveSpeed = 2.0;                   // 音波扩散速度（秒，完整扩散一轮所需时间）
+window.MusicPlayerWaveScale = 1.8;                   // 音波扩散倍数（最大扩散倍数）
+
+// UI 图标配置
+window.MusicPlayerBallIconSize = 18;                 // 悬浮球播放/暂停图标尺寸（像素）
+window.MusicPlayerExpandedAlbumSize = 70;            // 展开面板唱片尺寸（像素）
 ```
 
 ## 📦 模块说明
@@ -198,12 +245,21 @@ window.MusicPlayerWaveScale = 1.6;                 // 音波扩散倍数
 功能完整的音乐播放器，支持播放列表、进度控制、音量调节等。
 
 **特性：**
-- ✅ 悬浮球设计，可展开/收起
-- ✅ 唱片旋转动画 + 音波扩散效果
-- ✅ 支持自定义封面和API对接
-- ✅ 主题自适应（深色/浅色模式）
-- ✅ 播放列表、进度条、音量控制
-- ✅ 响应式设计，移动端优化
+- ✅ **悬浮球设计**：收起时为圆形悬浮球，展开时为完整面板
+- ✅ **视觉效果**：
+  - 唱片旋转动画（可自定义转速）
+  - 音波扩散效果（播放时环绕悬浮球的动态音波）
+  - 可自定义描边宽度和颜色
+- ✅ **播放控制**：上一首、播放/暂停、下一首
+- ✅ **进度控制**：拖动进度条跳转播放位置
+- ✅ **音量调节**：独立音量滑块控制
+- ✅ **播放列表**：显示所有歌曲，点击切换
+- ✅ **自定义封面**：支持随机分配封面图片
+- ✅ **API对接**：通过API获取音乐列表
+- ✅ **主题自适应**：自动跟随系统深色/浅色模式
+- ✅ **响应式设计**：PC端和移动端完美适配
+- ✅ **GitHub链接**：可选的GitHub仓库跳转图标
+- ✅ **自动收起**：展开后一段时间无操作自动收起
 
 ## 🎯 项目优势
 
