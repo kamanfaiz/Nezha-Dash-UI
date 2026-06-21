@@ -34,8 +34,8 @@ window.EnableMusicPlayer = true; // 是否启用音乐播放器（true/false）
 window.MusicPlayerBallSize = 50; // 悬浮球尺寸（单位：像素）
 window.MusicPlayerAutoCollapse = 2600; // 自动收起面板的延迟时间（单位：毫秒）
 window.MusicPlayerTitle = "NeZha Music Player"; // 音乐播放器标题/默认艺术家名称（当文件名无"-"时使用）
-window.MusicPlayerAPIUrl = "https://music.588945.xyz/api/music/list"; // 音乐列表API地址
-window.MusicPlayerDefaultVolume = 0.2; // 默认音量（范围：0-1）
+window.MusicPlayerAPIUrl = "https://music.629569.xyz/data/info.json"; // 音乐列表API地址
+window.MusicPlayerDefaultVolume = 0.7; // 默认音量（范围：0-1）
 
 // GitHub 链接配置
 window.MusicPlayerGitHubUrl = "https://github.com/kamanfaiz/Nezha-Dash-UI"; // GitHub仓库链接（留空或false则不显示图标）
@@ -43,23 +43,15 @@ window.MusicPlayerGitHubIconSize = 28; // GitHub 图标容器大小（单位：�
 
 // 封面配置
 window.MusicPlayerCoverList = [ // 封面图片列表（随机分配给歌曲）
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover01.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover02.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover03.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover04.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover05.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover06.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover07.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover08.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover09.jpg",
-  "https://cdn.jsdelivr.net/gh/kamanfaiz/Nezha-Dash-UI@main/cover/cover10.jpg",
+  "https://css.629569.xyz/nezha/cover/cover01.png",
+  "https://css.629569.xyz/nezha/cover/cover02.png",
 ];
 
 // 视觉效果配置
 window.MusicPlayerRotationSpeed = 5; // 唱片旋转速度（数值越大转速越慢，单位：秒/圈）
 window.MusicPlayerStrokeWidth = 4.5; // 悬浮球描边宽度（单位：像素，0表示无描边）
 window.MusicPlayerStrokeColor = ""; // 悬浮球描边颜色（留空则自动适配主题：暗色模式黑色，亮色模式白色）
-window.MusicPlayerOpacity = 0.5; // 播放器面板不透明度（范围：0-1）
+window.MusicPlayerOpacity = 0.7; // 播放器面板不透明度（范围：0-1）
 
 // 音波效果配置
 window.MusicPlayerWaveStrokeWidth = "2.8px"; // PC端音波圆环宽度
@@ -68,7 +60,7 @@ window.MusicPlayerWaveSpeed = 2.0; // 音波扩散速度（单位：秒，完整
 window.MusicPlayerWaveScale = 1.8; // 音波扩散比例（最大扩散倍数）
 
 // UI 图标配置
-window.MusicPlayerBallIconSize = 18; // 悬浮球播放/暂停图标尺寸（单位：像素）
+window.MusicPlayerBallIconSize = 23; // 悬浮球播放/暂停图标尺寸（单位：像素）
 window.MusicPlayerExpandedAlbumSize = 70; // 展开面板唱片尺寸（单位：像素，建议比悬浮球大一些）
 
 // ================================================================
@@ -150,6 +142,7 @@ function initMusicPlayer() {
     border-radius: 15px;
     width: auto !important;
     height: auto !important;
+    overflow: visible; /* 允许播放列表弹出容器上方 */
   }
 
   /* ==================== 主内容区 ==================== */
@@ -168,7 +161,7 @@ function initMusicPlayer() {
   .music-player-container.expanded .music-player-main {
     padding: 10px;
     gap: 12px;
-    overflow: visible; /* 展开时允许内容溢出 */
+    overflow: hidden; /* 内容限制在容器内 */
   }
 
   /* ==================== 悬浮球封面（收起状态） ==================== */
@@ -329,11 +322,11 @@ function initMusicPlayer() {
   /* ==================== 信息和控制区域 ==================== */
   .music-info-section {
     flex: 1;
-    min-width: fit-content;
+    min-width: 0; /* 允许flex子项收缩，防止溢出 */
     opacity: 0;
     display: none;
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden;
     align-items: stretch;
   }
 
@@ -443,6 +436,44 @@ function initMusicPlayer() {
     opacity: 1;
     transform: scale(1.1);
     background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* ==================== 移动端适配 ==================== */
+  @media (max-width: 768px) {
+    .music-player-container.expanded {
+      max-width: 90vw;
+    }
+    .music-controls {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .music-volume-slider {
+      width: 40px;
+    }
+    .music-btn {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .music-playlist {
+      width: 260px;
+      margin-left: -130px;
+    }
+    .music-playlist-inner {
+      max-height: 200px;
+    }
+    .music-progress-bar {
+      height: 6px;
+    }
+    .music-progress-section {
+      min-width: 0; /* 防止进度条溢出 */
+    }
+    .music-time {
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .music-track-info {
+      min-width: 0; /* 允许文字截断 */
+    }
   }
 
   /* GitHub链接图标 */
@@ -807,7 +838,6 @@ function initMusicPlayer() {
   nextBtn.title = "下一曲";
 
   const listBtnWrapper = document.createElement("div");
-  listBtnWrapper.style.position = "relative";
 
   const listBtn = document.createElement("button");
   listBtn.className = "music-btn";
@@ -869,7 +899,7 @@ function initMusicPlayer() {
   
   playlistInner.appendChild(playlistContent);
   playlistDiv.append(playlistHeader, playlistInner);
-  listBtnWrapper.appendChild(playlistDiv);
+  container.appendChild(playlistDiv); // 直接挂载到容器，避免被 mainSection 的 overflow:hidden 裁剪
 
   // 获取音量输入控件
   const volumeInput = volumeSlider.querySelector('input');
@@ -1422,17 +1452,48 @@ function initMusicPlayer() {
   // 第十部分：初始化执行
   // ================================================================
   
-  // 10.1 设置音波样式
+  // 10.1 设备检测与音波样式
   const isMobile = window.innerWidth <= 768;
-  const waveStrokeWidth = isMobile 
+  const waveStrokeWidth = isMobile
     ? (window.MusicPlayerWaveMobileStrokeWidth || "1.5px")
     : (window.MusicPlayerWaveStrokeWidth || "2.0px");
   container.style.setProperty('--wave-stroke-width', waveStrokeWidth);
-  
+
   const waveSpeed = (window.MusicPlayerWaveSpeed || 2.4) + 's';
   const waveScale = window.MusicPlayerWaveScale || 1.6;
   container.style.setProperty('--wave-speed', waveSpeed);
   container.style.setProperty('--wave-scale', waveScale);
+
+  // 移动端额外适配
+  function applyMobileAdaptation(mobile) {
+    if (mobile) {
+      container.style.bottom = '16px';
+      container.style.left = '12px';
+      container.style.touchAction = 'manipulation';
+      const currentSize = parseInt(container.style.width);
+      if (currentSize < 48) {
+        container.style.width = '48px';
+        container.style.height = '48px';
+        ballAlbum.style.width = '48px';
+        ballAlbum.style.height = '48px';
+      }
+    } else {
+      container.style.bottom = '20px';
+      container.style.left = '20px';
+      container.style.touchAction = '';
+    }
+  }
+  if (isMobile) applyMobileAdaptation(true);
+
+  // 断点切换监听
+  window.addEventListener('resize', () => {
+    const nowMobile = window.innerWidth <= 768;
+    applyMobileAdaptation(nowMobile);
+    const newStrokeWidth = nowMobile
+      ? (window.MusicPlayerWaveMobileStrokeWidth || "1.5px")
+      : (window.MusicPlayerWaveStrokeWidth || "2.0px");
+    container.style.setProperty('--wave-stroke-width', newStrokeWidth);
+  });
 
   // 10.2 加载播放列表
   loadPlaylist();

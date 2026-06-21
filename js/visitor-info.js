@@ -6,7 +6,7 @@
  */
 
 // ------------------ 访客信息配置 ------------------
-window.VisitorInfoAutoHideDelay = 2600; // 首次加载时自动隐藏的延迟时间 (毫秒)
+window.VisitorInfoAutoHideDelay = 2700; // 首次加载时自动隐藏的延迟时间 (毫秒)
 
 // ------------------ 工具函数 ------------------
 /**
@@ -122,6 +122,7 @@ function initVisitorInfo() {
     const container = document.createElement("div");
     document.body.appendChild(container);
     let btn = null; // 声明按钮变量以在函数作用域内访问
+    let mobileBtn = null; // 移动端切换按钮
 
     // 基本样式 (Base Styles)
     Object.assign(container.style, {
@@ -225,6 +226,9 @@ function initVisitorInfo() {
       // (新增) 如果按钮存在，则更新其背景颜色
       if (btn) {
         btn.style.backgroundColor = isDark ? "#2d363d" : "#4f6980";
+      }
+      if (mobileBtn) {
+        mobileBtn.style.backgroundColor = isDark ? "#2d363d" : "#4f6980";
       }
     };
 
@@ -377,12 +381,12 @@ function initVisitorInfo() {
       /**
        * -----------------------------------------------------------------
        * 手机端显示逻辑 (Mobile View Logic)
-       * - 首次访问时，信息框在底部弹出显示3秒，然后自动消失。
-       * - 消失后，恢复为原版逻辑：滚动到页面最底部时才显示。
+       * - 首次访问时，信息框在底部弹出显示后自动消失。
+       * - 消失后，右下角显示切换按钮，点击以居中浮层方式展示信息。
        * -----------------------------------------------------------------
        */
 
-      // 1. 首次加载时动画显示
+      // 1. 首次加载时底部滑入动画显示
       Object.assign(container.style, {
         position: "fixed",
         left: "0",
@@ -392,32 +396,140 @@ function initVisitorInfo() {
         transition: "opacity 0.5s ease-in-out, transform 0.5s ease-in-out",
         transform: "translateY(0)",
         opacity: "1",
+        borderRadius: "12px 12px 0 0",
       });
 
-      // 2. 3秒后动画消失
+      // 2. 创建移动端切换按钮（圆形，右下角）
+      mobileBtn = document.createElement("button");
+      const mobileBtnIcon = document.createElement("i");
+      mobileBtnIcon.className = "iconfont icon-footprint-full";
+      Object.assign(mobileBtnIcon.style, { color: "#ffffff", fontSize: "22px" });
+      Object.assign(mobileBtn.style, {
+        position: "fixed",
+        right: "16px",
+        bottom: "16px",
+        zIndex: "1100",
+        width: "44px",
+        height: "44px",
+        padding: "0",
+        border: "none",
+        borderRadius: "50%",
+        cursor: "pointer",
+        display: "none",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 2px 8px rgba(45,54,61,.5)",
+        transition: "opacity 0.3s, background-color 0.3s ease",
+        opacity: "0.3",
+        touchAction: "manipulation",
+      });
+      mobileBtn.append(mobileBtnIcon);
+      document.body.append(mobileBtn);
+      // 按钮主题由 updateTheme() 统一管理
+
+      // 3. 移动端显示/隐藏逻辑
+      const mobileHandleClickOutside = (e) => {
+        if (
+          !container.contains(e.target) &&
+          e.target !== mobileBtn &&
+          !mobileBtn.contains(e.target)
+        ) {
+          hideMobilePanel();
+        }
+      };
+
+      const showMobilePanel = () => {
+        // 居中浮层样式
+        Object.assign(container.style, {
+          position: "fixed",
+          left: "50%",
+          top: "50%",
+          bottom: "auto",
+          width: "auto",
+          maxWidth: "90vw",
+          maxHeight: "80vh",
+          overflowY: "auto",
+          borderRadius: "8px",
+          display: "block",
+          opacity: "1",
+          transform: "translate(-50%, -50%)",
+          transition: "opacity 0.3s ease, transform 0.3s ease",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+        });
+        mobileBtn.style.display = "none";
+        clearTimeout(window._mobileOpacityTimer);
+        setTimeout(() => {
+          document.addEventListener("click", mobileHandleClickOutside);
+        }, 0);
+      };
+
+      const hideMobilePanel = () => {
+        container.style.transition = "opacity 0.3s ease";
+        container.style.opacity = "0";
+        setTimeout(() => {
+          container.style.display = "none";
+          mobileBtn.style.display = "flex";
+          mobileBtn.style.opacity = "1";
+          document.removeEventListener("click", mobileHandleClickOutside);
+          // 恢复半透明
+          window._mobileOpacityTimer = setTimeout(() => {
+            if (container.style.display === "none")
+              mobileBtn.style.opacity = "0.3";
+          }, 2600);
+        }, 300);
+      };
+
+      // 绑定按钮事件
+      mobileBtn.onclick = (e) => {
+        e.stopPropagation();
+        showMobilePanel();
+      };
+
+      // 4. 自动消失后显示切换按钮
       setTimeout(() => {
         container.style.opacity = "0";
         container.style.transform = "translateY(100%)";
 
-        // 3. 动画结束后，切换为滚动到底部显示
         setTimeout(() => {
+          container.style.display = "none";
+          mobileBtn.style.display = "flex";
+          // 将容器样式预置为居中浮层（下次点击按钮时直接显示）
           Object.assign(container.style, {
-            position: "absolute",
-            display: "none",
+            position: "fixed",
+            left: "50%",
+            top: "50%",
+            bottom: "auto",
+            width: "auto",
+            maxWidth: "90vw",
+            borderRadius: "8px",
+            transform: "translate(-50%, -50%)",
             opacity: "1",
-            transform: "translateY(0)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           });
-          container.style.bottom = ""; // 移除fixed定位的bottom属性
+        }, 500);
+      }, window.VisitorInfoAutoHideDelay || 2000);
 
-          window.addEventListener("scroll", () => {
-            container.style.display =
-              window.scrollY + window.innerHeight >=
-              document.body.scrollHeight
-                ? "block"
-                : "none";
-          });
-        }, 500); // 等待淡出动画完成
-      }, window.VisitorInfoAutoHideDelay || 2000); // 使用配置的时间
+      // 5. 页面可见性变化：恢复时自动展示
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden || window.innerWidth > 768) return;
+        if (container.style.display === "none") {
+          showMobilePanel();
+          // 自动收起
+          setTimeout(() => {
+            if (container.style.display !== "none") hideMobilePanel();
+          }, window.VisitorInfoAutoHideDelay || 2000);
+        }
+      });
+
+      // 6. 监听窗口大小变化：切换到桌面端时清理移动端元素
+      window.addEventListener("resize", () => {
+        if (window.innerWidth > 768) {
+          container.style.display = "none";
+          if (mobileBtn) mobileBtn.style.display = "none";
+          document.removeEventListener("click", mobileHandleClickOutside);
+          clearTimeout(window._mobileOpacityTimer);
+        }
+      });
     }
   }
 }
